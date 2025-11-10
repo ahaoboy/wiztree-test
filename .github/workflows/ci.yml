@@ -64,3 +64,5 @@ jobs:
         with:
           artifacts: "${{ matrix.target }}.png,${{ matrix.target }}.json"
           allowUpdates: true
+          tag: "nightly"
+          makeLatest: false
