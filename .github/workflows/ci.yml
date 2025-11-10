@@ -1,0 +1,65 @@
+name: CI
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    name: ci-${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: easy-install/easy-setup@v1
+        with:
+          url: |-
+            https://github.com/ahaoboy/wiztree-metafile
+            https://github.com/ahaoboy/metafile-viz
+
+      - name: run wiztree
+        eun: |
+          cd /
+          pwd
+          wiztree-metafile ./ -o ~/${{ matrix.target }}.json
+          ls -lh ~/${{ matrix.target }}.json
+
+      - name: run metafile-viz
+        eun: |
+          cd ~
+          metafile-viz ${{ matrix.target }}.json -o ~/${{ matrix.target }}.png --width 1920 --height 1080
+          ls -lh ~/${{ matrix.target }}.png
+
+      - name: Upload PNG
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}.png
+          path: ~/${{ matrix.target }}.png
+
+      - name: Upload JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}.json
+          path: ~/${{ matrix.target }}.json
+
+      - name: release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "~/${{ matrix.target }}.png,~/${{ matrix.target }}.json"
+          allowUpdates: true
