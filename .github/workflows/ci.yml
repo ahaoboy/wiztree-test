@@ -26,7 +26,7 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
-    name: ci-${{ matrix.target }}
+    name: ci-${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: easy-install/easy-setup@v1
@@ -35,34 +35,40 @@ jobs:
             https://github.com/ahaoboy/wiztree-metafile
             https://github.com/ahaoboy/metafile-viz
 
-      - name: run wiztree
+      - name: run wiztree unix
+        if: ${{ matrix.os != 'windows-latest' }}
         run: |
-          pwd
-          df
-          wiztree-metafile / -i "/proc" -o ${{ matrix.target }}.json
-          ls -lh ${{ matrix.target }}.json
+          wiztree-metafile / -i "/proc" -o ${{ matrix.os }}.json
+          ls -lh ${{ matrix.os }}.json
+
+      - name: run wiztree windows
+        shell: powershell
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          wiztree-metafile c:/ -o ${{ matrix.os }}.json
+          ls ${{ matrix.os }}.json
 
       - name: run metafile-viz
         run: |
-          metafile-viz ${{ matrix.target }}.json -o ${{ matrix.target }}.png --width 1920 --height 1080
-          ls -lh ${{ matrix.target }}.png
+          metafile-viz ${{ matrix.os }}.json -o ${{ matrix.os }}.png --width 1920 --height 1080
+          ls -lh ${{ matrix.os }}.png
 
       - name: Upload PNG
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}.png
-          path: ${{ matrix.target }}.png
+          name: ${{ matrix.os }}.png
+          path: ${{ matrix.os }}.png
 
       - name: Upload JSON
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}.json
-          path: ${{ matrix.target }}.json
+          name: ${{ matrix.os }}.json
+          path: ${{ matrix.os }}.json
 
       - name: release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "${{ matrix.target }}.png,${{ matrix.target }}.json"
+          artifacts: "${{ matrix.os }}.png,${{ matrix.os }}.json"
           allowUpdates: true
           tag: "nightly"
           makeLatest: false
