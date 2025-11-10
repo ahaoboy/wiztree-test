@@ -39,7 +39,7 @@ jobs:
         run: |
           pwd
           df
-          wiztree-metafile / -o ${{ matrix.target }}.json
+          wiztree-metafile / -i "/proc" -o ${{ matrix.target }}.json
           ls -lh ${{ matrix.target }}.json
 
       - name: run metafile-viz
