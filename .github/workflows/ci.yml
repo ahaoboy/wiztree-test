@@ -9,6 +9,10 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+defaults:
+  run:
+    shell: bash --noprofile --norc -CeEuo pipefail {0}
+
 jobs:
   ci:
     strategy:
@@ -33,32 +37,30 @@ jobs:
 
       - name: run wiztree
         run: |
-          cd /
           pwd
-          df . -lh
-          wiztree-metafile ./ -o ~/${{ matrix.target }}.json
-          ls -lh ~/${{ matrix.target }}.json
+          df
+          wiztree-metafile / -o ${{ matrix.target }}.json
+          ls -lh ${{ matrix.target }}.json
 
       - name: run metafile-viz
         run: |
-          cd ~
-          metafile-viz ${{ matrix.target }}.json -o ~/${{ matrix.target }}.png --width 1920 --height 1080
-          ls -lh ~/${{ matrix.target }}.png
+          metafile-viz ${{ matrix.target }}.json -o ${{ matrix.target }}.png --width 1920 --height 1080
+          ls -lh ${{ matrix.target }}.png
 
       - name: Upload PNG
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}.png
-          path: ~/${{ matrix.target }}.png
+          path: ${{ matrix.target }}.png
 
       - name: Upload JSON
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}.json
-          path: ~/${{ matrix.target }}.json
+          path: ${{ matrix.target }}.json
 
       - name: release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "~/${{ matrix.target }}.png,~/${{ matrix.target }}.json"
+          artifacts: "${{ matrix.target }}.png,${{ matrix.target }}.json"
           allowUpdates: true
